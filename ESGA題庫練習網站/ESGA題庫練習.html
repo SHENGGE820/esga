@@ -75,7 +75,7 @@ function loadQ(){
   const c=document.getElementById('qc');
   c.innerHTML='';
   document.getElementById('sbox').style.display='none';
-  document.getElementById('bsub').style.display='inline-block';
+  document.getElementById('bsub').style.display='none';
   document.getElementById('progf').style.width='0%';
   const L=['A','B','C','D'];
   CQ.forEach((q,i)=>{
@@ -88,12 +88,44 @@ function loadQ(){
   up();
   window.scrollTo({top:0,behavior:'smooth'});
 }
+function judgeQ(qi,oi){
+  const L=['A','B','C','D'];
+  const q=CQ[qi];
+  const card=document.getElementById('c'+qi);
+  const badge=document.getElementById('b'+qi);
+  const ci=L.indexOf(q.ans);
+  const ce=document.getElementById('o'+qi+'_'+ci);
+  for(let j=0;j<4;j++)document.getElementById('o'+qi+'_'+j).style.cursor='default';
+  if(oi===ci){
+    const se=document.getElementById('o'+qi+'_'+oi);
+    se.classList.remove('sel');
+    se.classList.add('ca');
+    badge.className='rb ok';badge.textContent='✅ 答對了！';
+    card.classList.add('correct');
+  }else{
+    const se=document.getElementById('o'+qi+'_'+oi);
+    se.classList.remove('sel');
+    se.classList.add('wa');
+    ce.classList.add('ca');
+    badge.className='rb no';badge.textContent='❌ 答錯了・正確答案：'+q.ans;
+    card.classList.add('wrong');
+  }
+}
 function sl2(qi,oi){
   const card=document.getElementById('c'+qi);
   if(card.classList.contains('correct')||card.classList.contains('wrong'))return;
   for(let i=0;i<4;i++)document.getElementById('o'+qi+'_'+i).classList.remove('sel');
   document.getElementById('o'+qi+'_'+oi).classList.add('sel');
+  judgeQ(qi,oi);
   up();
+  setTimeout(()=>{
+    const next=document.getElementById('c'+(qi+1));
+    if(next){
+      next.scrollIntoView({behavior:'smooth',block:'center'});
+    }else{
+      subQ();
+    }
+  },800);
 }
 function up(){
   let n=0;
@@ -106,29 +138,11 @@ function up(){
   document.getElementById('progf').style.width=(n/30*100)+'%';
 }
 function subQ(){
-  const L=['A','B','C','D'];let ok=0;
-  CQ.forEach((q,i)=>{
+  let ok=0,done=0;
+  CQ.forEach((_,i)=>{
     const card=document.getElementById('c'+i);
-    const badge=document.getElementById('b'+i);
-    let ua=null;
-    for(let j=0;j<4;j++){const e=document.getElementById('o'+i+'_'+j);if(e.classList.contains('sel')){ua=L[j];break;}}
-    for(let j=0;j<4;j++){document.getElementById('o'+i+'_'+j).style.cursor='default';}
-    const ci=L.indexOf(q.ans);
-    const ce=document.getElementById('o'+i+'_'+ci);
-    if(ua===null){
-      badge.className='rb no';badge.textContent='⚠️ 未作答・正確答案：'+q.ans;
-      ce.classList.add('ca');card.classList.add('wrong');
-    }else if(ua===q.ans){
-      badge.className='rb ok';badge.textContent='✅ 答對了！';
-      card.classList.add('correct');ok++;
-    }else{
-      const ui=L.indexOf(ua);
-      document.getElementById('o'+i+'_'+ui).classList.remove('sel');
-      document.getElementById('o'+i+'_'+ui).classList.add('wa');
-      ce.classList.add('ca');
-      badge.className='rb no';badge.textContent='❌ 答錯了・正確答案：'+q.ans;
-      card.classList.add('wrong');
-    }
+    if(card.classList.contains('correct')){ok++;done++;}
+    else if(card.classList.contains('wrong'))done++;
   });
   const pct=Math.round(ok/30*100);
   document.getElementById('sn').textContent=ok+' / 30';
@@ -137,7 +151,7 @@ function subQ(){
   document.getElementById('sg').textContent=g;
   document.getElementById('sbox').style.display='block';
   document.getElementById('bsub').style.display='none';
-  document.getElementById('progf').style.width='100%';
+  if(done===CQ.length)document.getElementById('progf').style.width='100%';
   document.getElementById('sbox').scrollIntoView({behavior:'smooth',block:'center'});
 }
 window.addEventListener('scroll',()=>{
